@@ -27,13 +27,13 @@ import {useArrayPagination} from 'vue-composable';
 
 export default {
    props: {
-      array: Array,
+      rates: Array,
       currencyQuantity: Number,
       currentCurrency: String,
       countCurrencies: Number
    },
    setup(props) {
-      const {next, prev, currentPage, lastPage, result} = useArrayPagination(props.array, {
+      const {next, prev, currentPage, lastPage, result} = useArrayPagination(props.rates, {
          'pageSize': props.countCurrencies
       });
 

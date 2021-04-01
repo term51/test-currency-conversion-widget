@@ -1,37 +1,39 @@
 <template>
    <div id="app">
-      <div class="widget-title">Курс {{ currentCurrency }} на {{ currentDate }}</div>
+      <div class="widget-title">Курс {{ currentCurrency }} на {{ currentDate | dateNormalize }}</div>
       <tabs @clicked="tabClicked" ref="tabs">
-         <tab v-for="(currencies) in openratesData" :key="currencies.base" :name="currencies.base">
-            <div class="user-input">
-               <input @input="checkCurrencyQuantity" v-model="currencyQuantity"> {{ currentCurrency }}
-            </div>
-            <CurrencyPagination
-               :array="currencies.rates"
-               :currencyQuantity="parseFloat(currencyQuantity)"
-               :currentCurrency="currentCurrency"
-               :countCurrencies="countCurrencies"
+         <tab v-for="(currencies) in openratesData"
+              :key="currencies.base"
+              :name="currencies.base">
+            <currency-quantity
+               @user-input="userInput"
+               :current-currency="currentCurrency"/>
+            <currency-exchange-rates
+               :rates="currencies.rates"
+               :currency-quantity="parseFloat(currencyQuantity)"
+               :current-currency="currentCurrency"
+               :count-currencies="countCurrencies"
             />
          </tab>
       </tabs>
    </div>
 </template>
 <script>
-import CurrencyPagination from './components/ArrayPagination';
+import CurrencyExchangeRates from './components/CurrencyExchangeRates';
+import CurrencyQuantity from './components/CurrencyQuantity';
 import {Tabs, Tab} from 'vue-tabs-component';
-
 
 export default {
    components: {
-      Tabs, Tab, CurrencyPagination
+      Tabs, Tab, CurrencyExchangeRates, CurrencyQuantity
    },
    data() {
       return {
+         currencyQuantity: 1,
+         currentCurrency: '',
          openratesData: [],
          isFirstTabsLoad: false,
-         currentCurrency: '',
          currentDate: '',
-         currencyQuantity: 1,
          countCurrencies: 4
       };
    },
@@ -53,59 +55,24 @@ export default {
       changePage(pagination) {
          this.currentPage = pagination.page;
       },
-      getData() {
-         fetch('http://localhost:3000/api/openrates')
-            .then(response => {
-                  if (response.body) return response.json();
-               }
-            )
-            .then(data => {
-               this.isFirstTabsLoad = true;
-               this.currentCurrency = data[0].base;
-               this.currentDate = this.getDateNormalize(data[0].date);
-               this.openratesData = this.ratesObjectToArray(data);
-               console.log(this.openratesData);
-            });
-      },
-      ratesObjectToArray(data) {
-         const result = [];
-         data.forEach((item, index) => {
-            result.push({
-               'base': item.base,
-               'date': item.date,
-               'id': item.id,
-               'rates': []
-            });
-            for (let rate in item.rates) {
-               if (item.rates.hasOwnProperty(rate)) {
-                  result[index].rates.push({
-                     'currency': rate,
-                     'rate': item.rates[rate]
-                  });
-               }
-            }
-         });
-         return result;
-      },
-      getDateNormalize(date) {
-         const localDate = new Date(date);
-         let month = (localDate.getMonth() + 1);
-         month = month > 9 ? month : '0' + month;
-         return localDate.getFullYear() + '.' + month + '.' + localDate.getDate();
+      async getData() {
+         this.isFirstTabsLoad = true;
+         await this.$store.dispatch('getAPIopenratesData');
+         this.openratesData = this.$store.state.openratesData;
+         this.currentCurrency = this.openratesData[0].base;
+         this.currentDate = this.openratesData[0].date;
       },
       tabClicked(selectedTab) {
          this.currentCurrency = this.findTab('base', selectedTab.tab.name);
-         this.currentDate = this.getDateNormalize(this.findTab('date', selectedTab.tab.name));
+         this.currentDate = this.findTab('date', selectedTab.tab.name);
       },
       findTab(key, tabName) {
          return this.openratesData.find(tab => {
             if (tabName === tab.base) return true;
          })[key];
       },
-      checkCurrencyQuantity(input) {
-         if (!isFinite(input.data)) {
-            this.currencyQuantity = 1;
-         }
+      userInput(value) {
+         this.currencyQuantity = value;
       }
    }
 };
@@ -137,28 +104,6 @@ body {
    color: #2B2D33;
    padding-top: 30px;
    padding-left: 24px;
-}
-
-.user-input {
-   input {
-      outline: none;
-      border: none;
-      font-size: 18px;
-      line-height: 21px;
-      color: #2B2D33;
-      max-width: 120px;
-      text-align: right;
-      position: relative;
-      border-bottom: 1px solid #D9D9D9;
-   }
-
-   text-align: right;
-   padding-top: 25px;
-   margin-bottom: 25px;
-   padding-right: 25px;
-   font-size: 18px;
-   line-height: 21px;
-   color: #B9B9B9;
 }
 
 .tabs-component-panels {

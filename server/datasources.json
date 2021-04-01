@@ -1,16 +1,34 @@
 {
-  "db": {
-    "name": "db",
-    "connector": "memory"
-  },
-  "mongoDB": {
-    "host": "localhost",
-    "port": 27017,
-    "url": "",
-    "database": "testdb",
-    "password": "",
-    "name": "testdb",
-    "user": "",
-    "connector": "mongodb"
-  }
+   "db": {
+      "name": "db",
+      "connector": "memory"
+   },
+   "mongoDB": {
+      "host": "localhost",
+      "port": 27017,
+      "url": "",
+      "database": "testdb",
+      "password": "",
+      "name": "mongoDB",
+      "user": "",
+      "connector": "mongodb"
+   },
+   "APIopenratesio": {
+      "name": "APIopenratesio",
+      "connector": "rest",
+      "operations": [
+         {
+            "template": {
+               "method": "GET",
+               "url": "https://api.openrates.io/latest",
+               "query": {
+                  "base": "{base=USD}"
+               }
+            },
+            "functions": {
+               "getCurrency": ["base"]
+            }
+         }
+      ]
+   }
 }
